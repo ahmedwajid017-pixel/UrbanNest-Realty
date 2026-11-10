@@ -11,9 +11,9 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'description',
-    ];
+    'name',
+    'description',
+];
 
     public function properties(): HasMany
     {

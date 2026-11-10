@@ -27,12 +27,16 @@ class Property extends Model
     }
 
     public function agent(): BelongsTo
-    {
-        return $this->belongsTo(Agent::class);
-    }
+{
+    return $this->belongsTo(Agent::class);
+}
 
     public function documents(): HasMany
     {
         return $this->hasMany(Document::class);
     }
+    public function images(): HasMany
+{
+    return $this->hasMany(PropertyImage::class);
+}
 }

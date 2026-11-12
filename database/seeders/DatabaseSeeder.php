@@ -14,7 +14,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create 5 property categories
-        $categories = Category::factory()->count(5)->create();
+       $categories = collect([
+    'House',
+    'Apartment',
+    'Commercial',
+    'Villa',
+    'Land',
+])->map(fn ($name) => Category::firstOrCreate(
+    ['name' => $name],
+    ['description' => fake()->sentence()]
+));
 
         // Create 5 real estate agents
         $agents = Agent::factory()->count(5)->create();
@@ -35,5 +44,8 @@ class DatabaseSeeder extends Seeder
                 'property_id' => $properties->random()->id,
             ])
             ->create();
+            $this->call([
+    RoleSeeder::class,
+]);
     }
 }

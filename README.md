@@ -2,7 +2,7 @@
 
 UrbanNest Realty is a Laravel-based real estate management application designed to manage property listings, categories, agents, and property documents.
 
-The application includes a staff property management interface that allows users to create, view, update, and delete properties, along with uploading and displaying multiple images for each property.
+The application includes a property management interface with custom role-based access control (RBAC), allowing Owners, Agents, and Staff to access features according to their assigned permissions.
 
 ## Technologies Used
 
@@ -17,25 +17,56 @@ The application includes a staff property management interface that allows users
 
 ## Features
 
-### Property Management
+### 1. Property Management
 
-- View all property listings.
+- View property listings.
 - Create new property records.
 - View individual property details.
 - Edit and update existing properties.
 - Delete property records.
 
-### Multiple Image Uploads
+### 2. Multiple Image Uploads
 
-- Upload multiple images against a single property.
-- Support for JPG, JPEG, PNG, and WEBP formats.
+- Upload multiple images for a single property.
+- Support JPG, JPEG, PNG, and WEBP formats.
 - Maximum 10 images per upload request.
 - Maximum file size of 5 MB per image.
 - Display uploaded images on the property details page.
 - Upload additional images when updating a property.
 - Store uploaded images using Laravel's public storage disk.
 
-### Other Features
+### 3. Role-Based Access Control (RBAC)
+
+The application uses a custom role-based access control system with three roles:
+
+| Role | Permissions |
+|---|---|
+| Owner | Full access to property management, including creating, viewing, updating, and deleting properties. |
+| Agent | Can manage properties assigned to their agent account. |
+| Staff | Can view property listings but cannot create, update, or delete properties. |
+
+RBAC implementation includes:
+
+- Custom roles table with Owner, Agent, and Staff roles.
+- Role assignment through the `role_id` relationship on users.
+- Custom `CheckRole` middleware to restrict protected routes.
+- `PropertyPolicy` to control property-related actions.
+- Agent ownership checks to prevent agents from modifying other agents' properties.
+- Protected admin routes requiring authentication and an authorized role.
+
+### 4. Authentication and Security
+
+- User registration and login using Laravel Breeze.
+- Password hashing.
+- Authentication-protected routes.
+- Role-based authorization.
+- Property ownership validation.
+- Server-side validation for uploaded images.
+- Mass assignment protection through model fillable attributes.
+- CSRF protection through Laravel's web middleware.
+- XSS protection through Blade's default output escaping.
+
+### 5. Other Features
 
 - Manage property categories.
 - Manage real estate agents.
@@ -96,29 +127,29 @@ To create all database tables using the migration files, run:
 docker compose exec laravel.test php artisan migrate
 ```
 
-This creates the required tables for:
-
-- Users
-- Categories
-- Agents
-- Properties
-- Documents
-- Property Images
+The migrations create the required tables for users, roles, agents, categories, properties, documents, and property images.
 
 ### 6. Run Database Seeders
 
-To insert sample data using factories and `DatabaseSeeder.php`, run:
+To insert sample data using the database seeders, run:
 
 ```bash
 docker compose exec laravel.test php artisan db:seed
 ```
 
-The seeders create sample data, including:
+The seeders create:
 
-- 5 categories
-- 5 agents
-- 20 properties
-- 30 documents
+- Default roles: Owner, Agent, and Staff.
+- Sample property categories.
+- Sample real estate agents.
+- Sample properties.
+- Sample property documents.
+
+To seed roles separately:
+
+```bash
+docker compose exec laravel.test php artisan db:seed --class=RoleSeeder
+```
 
 ### 7. Configure Public Image Storage
 
@@ -154,6 +185,32 @@ To access the property management interface:
 http://localhost/admin/properties
 ```
 
+You must log in with an account that has an authorized role.
+
+## User Roles and Account Assignment
+
+Newly registered users are automatically assigned the Staff role.
+
+An Owner or Agent role must be assigned through an authorized administrative process or database setup.
+
+For development purposes, roles can be assigned using Laravel Tinker:
+
+```bash
+docker compose exec laravel.test php artisan tinker
+```
+
+Example of assigning the Owner role:
+
+```php
+$user = App\Models\User::where('email', 'user@example.com')->firstOrFail();
+
+$user->role_id = App\Models\Role::where('name', 'Owner')->firstOrFail()->id;
+
+$user->save();
+```
+
+For Agent accounts, an existing Agent record must also be linked through the user's `agent_id` field.
+
 ## Running Migrations and Seeders Together
 
 To reset the database, recreate all tables, and insert fresh sample data, run:
@@ -162,7 +219,7 @@ To reset the database, recreate all tables, and insert fresh sample data, run:
 docker compose exec laravel.test php artisan migrate:fresh --seed
 ```
 
-**Note:** This command deletes all existing database records before recreating the tables and running the seeders.
+**Note:** This command deletes all existing database records before recreating the tables and running the seeders. Use it only when you intend to reset the database.
 
 ## Property Image Validation
 
@@ -181,47 +238,91 @@ Upload restrictions:
 - Maximum 5 MB per image.
 - Non-image files are rejected.
 
+## Security and Authorization
+
+The application uses Laravel middleware and policies to protect property management operations.
+
+- Authentication middleware ensures users are logged in.
+- Role middleware checks whether users have an authorized role.
+- Property policies enforce permissions for individual property actions.
+- Agents can only manage properties assigned to their agent accounts.
+- Staff users have view-only access to property listings.
+- Owner users have full property management permissions.
+
+### Security Check Command
+
+The project includes a custom Artisan command to check important security configurations.
+
+Run:
+
+```bash
+docker compose exec laravel.test php artisan security:check
+```
+
+The command checks:
+
+- Role middleware registration.
+- Property policy registration.
+- Existence of Owner, Agent, and Staff roles.
+- Public storage link.
+
+### Security Review
+
+The SECURITY_REVIEW.md file contains the project's security review, covering authentication, authorization, input validation, mass assignment, XSS protection, file uploads, and CSRF protection.
+
+## Running Tests
+
+Run the Laravel test suite using:
+
+```bash
+docker compose exec laravel.test php artisan test
+```
+
 ## Project Structure
 
 Important project directories:
 
 ```text
 app/
- ├── Http/
- │    ├── Controllers/
- │    │    └── Admin/
- │    │         └── PropertyController.php
- │    └── Requests/
- │         └── StorePropertyRequest.php
- │
- └── Models/
-      ├── Agent.php
-      ├── Category.php
-      ├── Document.php
-      ├── Property.php
-      └── PropertyImage.php
+├── Http/
+│   ├── Controllers/
+│   │   └── Admin/
+│   │       └── PropertyController.php
+│   ├── Middleware/
+│   │   └── CheckRole.php
+│   └── Requests/
+│       └── StorePropertyRequest.php
+├── Models/
+│   ├── User.php
+│   ├── Role.php
+│   ├── Agent.php
+│   ├── Category.php
+│   ├── Document.php
+│   └── Property.php
+└── Policies/
+    └── PropertyPolicy.php
 
 database/
- ├── migrations/
- ├── factories/
- └── seeders/
+├── migrations/
+├── factories/
+└── seeders/
 
 resources/
- └── views/
-      ├── layouts/
-      └── admin/
-           └── properties/
-                ├── index.blade.php
-                ├── create.blade.php
-                ├── edit.blade.php
-                └── show.blade.php
+└── views/
+
+routes/
+├── web.php
+└── auth.php
+
+SECURITY.md
+README.md
 ```
 
 ## Author
 
 **Wajid Ahmed**
 
-GitHub: [ahmedwajid017-pixel](https://github.com/ahmedwajid017-pixel)
+GitHub: https://github.com/ahmedwajid017-pixel
 
 ## Project Repository
 

@@ -7,9 +7,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 class User extends Authenticatable
+
 {
+    public function role(): BelongsTo
+{
+    return $this->belongsTo(Role::class);
+}
     use HasApiTokens, HasFactory, Notifiable;
 
     /**
@@ -41,4 +48,9 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function agent(): BelongsTo
+{
+    return $this->belongsTo(Agent::class);
+}
 }

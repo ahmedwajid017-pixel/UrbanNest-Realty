@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePropertyRequest extends FormRequest
 {
@@ -15,7 +16,15 @@ class StorePropertyRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'exists:categories,id'],
-            'agent_id' => ['required', 'exists:agents,id'],
+
+            'agent_id' => [
+                Rule::excludeIf(
+                    $this->user()?->role?->name === 'Agent'
+                ),
+                'required',
+                'exists:agents,id',
+            ],
+
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],

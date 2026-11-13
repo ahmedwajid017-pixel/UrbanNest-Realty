@@ -140,6 +140,7 @@ docker compose exec laravel.test php artisan db:seed
 The seeders create:
 
 - Default roles: Owner, Agent, and Staff.
+- Demo users assigned to Owner, Agent, and Staff roles.
 - Sample property categories.
 - Sample real estate agents.
 - Sample properties.
@@ -189,10 +190,10 @@ You must log in with an account that has an authorized role.
 
 ## User Roles and Account Assignment
 
+
 Newly registered users are automatically assigned the Staff role.
 
-An Owner or Agent role must be assigned through an authorized administrative process or database setup.
-
+For development purposes, the database seeder creates demo Owner, Agent, and Staff accounts. Additional roles can be assigned through an authorized administrative process.
 For development purposes, roles can be assigned using Laravel Tinker:
 
 ```bash
@@ -314,7 +315,7 @@ routes/
 ├── web.php
 └── auth.php
 
-SECURITY.md
+SECURITY_REVIEW.md
 README.md
 ```
 

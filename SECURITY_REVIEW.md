@@ -4,6 +4,8 @@
 
 The application uses Laravel Breeze for user registration, login, and logout. Passwords are hashed before being stored in the database. Authentication middleware protects routes that require a logged-in user.
 
+Laravel's web middleware provides CSRF protection for state-changing requests. Forms use the `@csrf` directive to include CSRF tokens.
+
 ## 2. Authorization and Role-Based Access Control
 
 The application implements custom role-based access control with three roles: Owner, Agent, and Staff.
@@ -41,7 +43,7 @@ Untrusted user input should not be rendered using unescaped Blade output such as
 
 Uploaded property images are validated on the server before storage. Files are stored using Laravel's public storage disk rather than being directly placed in application source directories.
 
-Property authorization and ownership checks should be maintained when accessing or managing property-related files.
+Property operations are protected by authorization policies. Agents can only manage properties assigned to their agent account. Uploaded images are validated before storage, and image deletion is performed through the application's authorized property management flow.
 
 ## 7. Security Recommendations
 

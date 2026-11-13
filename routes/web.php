@@ -30,15 +30,20 @@ Route::middleware('auth')->group(function () {
 });
 
 // All three roles can view property listings and details
+// All three roles can view property listings and details
+// All three roles can view property listings and details
 Route::middleware(['auth', 'role:Owner,Agent,Staff'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
         Route::get('/properties', [PropertyController::class, 'index'])
+            ->middleware('can:viewAny,App\Models\Property')
             ->name('properties.index');
 
         Route::get('/properties/{property}', [PropertyController::class, 'show'])
-            ->name('properties.show');
+    ->whereNumber('property')
+    ->middleware('can:view,property')
+    ->name('properties.show');
     });
 
 // Only Owner and Agent can access property management routes
@@ -47,20 +52,23 @@ Route::middleware(['auth', 'role:Owner,Agent'])
     ->name('admin.')
     ->group(function () {
         Route::get('/properties/create', [PropertyController::class, 'create'])
+            ->middleware('can:create,App\Models\Property')
             ->name('properties.create');
 
         Route::post('/properties', [PropertyController::class, 'store'])
+            ->middleware('can:create,App\Models\Property')
             ->name('properties.store');
 
         Route::get('/properties/{property}/edit', [PropertyController::class, 'edit'])
+            ->middleware('can:update,property')
             ->name('properties.edit');
 
-        Route::put('/properties/{property}', [PropertyController::class, 'update'])
+        Route::match(['put', 'patch'], '/properties/{property}', [PropertyController::class, 'update'])
+            ->middleware('can:update,property')
             ->name('properties.update');
 
-        Route::patch('/properties/{property}', [PropertyController::class, 'update']);
-
         Route::delete('/properties/{property}', [PropertyController::class, 'destroy'])
+            ->middleware('can:delete,property')
             ->name('properties.destroy');
     });
 

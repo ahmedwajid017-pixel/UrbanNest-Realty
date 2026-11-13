@@ -14,29 +14,30 @@ class PropertyPolicy
 
     public function view(User $user, Property $property): bool
     {
-        if ($user->role?->name === 'Owner' ||
-            $user->role?->name === 'Staff') {
+        if (in_array($user->role?->name, ['Owner', 'Staff'])) {
             return true;
         }
 
         return $user->role?->name === 'Agent'
+            && $user->agent_id !== null
             && $user->agent_id === $property->agent_id;
     }
 
     public function create(User $user): bool
-{
-    return $user->role?->name === 'Owner'
-        || (
-            $user->role?->name === 'Agent'
-            && $user->agent_id !== null
-        );
-}
+    {
+        return $user->role?->name === 'Owner'
+            || (
+                $user->role?->name === 'Agent'
+                && $user->agent_id !== null
+            );
+    }
 
     public function update(User $user, Property $property): bool
     {
         return $user->role?->name === 'Owner'
             || (
                 $user->role?->name === 'Agent'
+                && $user->agent_id !== null
                 && $user->agent_id === $property->agent_id
             );
     }
